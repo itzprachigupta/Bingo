@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bingo Game</title>
+    <style>
+        *{
+	    margin:0;
+	    padding:0;
+        box-sizing: border-box;
+	}
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+	        background: linear-gradient(to bottom, #D2B4DE, #A569BD, #5B2C6F);
+            height:100vh;
+        }
+	    #navbar{
+	        background-color:black;
+	        font-size:38px;
+            color:white;
+            text-align:left;
+	        margin: 5px;
+            display: flex;
+            justify-content: space-between;
+	        padding: 10px;
+            border:2px solid white;
+	        border-radius:20px;
+        }
+	    
+        #bingo-board-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 60vh;
+        }
+        #bingo-board {
+            display: grid;
+            grid-template-columns: repeat(5, 65px);
+            grid-template-rows: repeat(5, 65px);
+            gap: 5px;
+        }
+        #bingo-board .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fff;
+            border: 2px solid black;
+            border-radius: 7px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+        }
+        #bingo-board .selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #bingo-letters{
+            display:flex;
+            align-items:center;
+            justify-content:center; 
+            margin-top: 20px;
+            gap:5px; 
+        } 
+        .bingo-letter {
+            font-size: 40px;
+            font-weight: bold;
+            width:65px;
+            height:65px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fff;
+            border: 2px solid black;
+            border-radius: 7px;
+            font-size: 24px;
+            font-weight: bold;
+            -webkit-text-stroke:1px black;
+            color: white;
+            background-color: #F1C40F;
+        }
+        .bingo-letter.highlight {
+            color: black;
+            background-color: #f5b7b1;
+        }
+        button {
+            padding: 10px 20px;
+            margin-bottom: 5px;
+            font-size: 24px;
+            background-color: #4CAF50;
+            border: 1px solid black;
+            border-radius: 7px;
+            margin-top: 10px;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: white;
+            opacity: 0.8;
+            border-radius: 50%;
+            animation: confetti-fall 5s ease-out infinite;
+            transform-origin: 0 0;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-50vh) rotate(0deg);
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+        .winner-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            border: 5px groove #45a049;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="navbar">Let's Play<img src="https://www.obopay.com/obopay/wp-content/uploads/2017/04/airtel-logo.png" alt="airtel logo" style="height: 40px;">
+    </h1>
+    <div id="bingo-letters">
+        <span class="bingo-letter" id="letter-B">B</span>
+        <span class="bingo-letter" id="letter-I">I</span>
+        <span class="bingo-letter" id="letter-N">N</span>
+        <span class="bingo-letter" id="letter-G">G</span>
+        <span class="bingo-letter" id="letter-O">O</span>
+    </div>
+    <div id="bingo-board-container">
+        <div id="bingo-board"></div>
+    </div>
+    <button onclick="resetGame()">New Game</button>
+    <div id="winner-message" class="winner-message">
+        <h2>Congratulations!</h2>
+        <p>You are the winner!</p>
+    </div>
+
+    <script>
+        let bingoBoard = document.getElementById('bingo-board');
+        let numbers = [];
+        let selectedNumbers = [];
+        let bingoLetters = ['B', 'I', 'N', 'G', 'O'];
+        let letterIndex = 0;
+
+        // Initialize the game
+        function initGame() {
+            // Clear previous board
+            bingoBoard.innerHTML = '';
+            letterIndex = 0;
+            resetBingoLetters();
+
+            // Reset arrays
+            numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25];
+            selectedNumbers = [];
+
+            // Shuffle the numbers
+            numbers.sort(() => Math.random() - 0.5);
+
+            // Create bingo board
+            for (let i = 0; i < 25; i++) {
+                let cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.textContent = numbers[i];
+                cell.onclick = function () {
+                    toggleSelection(cell);
+                };
+                bingoBoard.appendChild(cell);
+            }
+        }
+
+        // Toggle selection of a cell
+        function toggleSelection(cell) {
+            if (!cell.classList.contains('selected')) {
+                cell.classList.add('selected');
+                selectedNumbers.push(parseInt(cell.textContent));
+                checkBingo();
+            } else {
+                cell.classList.remove('selected');
+                let index = selectedNumbers.indexOf(parseInt(cell.textContent));
+                if (index !== -1) {
+                    selectedNumbers.splice(index, 1);
+                }
+            }
+        }
+
+        // Check for bingo
+        function checkBingo() {
+            let count = 0;
+            // Check rows
+            for (let i = 0; i < 5; i++) {
+                let row = [i * 5, i * 5 + 1, i * 5 + 2, i * 5 + 3, i * 5 + 4];
+                if (row.every(num => selectedNumbers.includes(numbers[num]))) {
+                    count++;
+		    highlightBingoLetter(count);
+                    if (count == 5) {
+                        winner();
+                        return;
+                    }
+                }
+            }
+            // Check columns
+            for (let i = 0; i < 5; i++) {
+                let column = [i, i + 5, i + 10, i + 15, i + 20];
+                if (column.every(num => selectedNumbers.includes(numbers[num]))) {
+                    count++;
+                    highlightBingoLetter(count);
+                    if (count == 5) {
+                        winner();
+                        return;
+                    }
+                }
+            }
+            // Check diagonals
+            if ([0, 6, 12, 18, 24].every(num => selectedNumbers.includes(numbers[num]))) {
+                count++;
+                highlightBingoLetter(count);
+                if (count == 5) {
+                    winner();
+                    return;
+                }
+            }
+            if ([4, 8, 12, 16, 20].every(num => selectedNumbers.includes(numbers[num]))) {
+                count++;
+                highlightBingoLetter(count);
+                if (count == 5) {
+                    winner();
+                    return;
+                }
+            }
+        }
+
+        // Highlight BINGO letters as game runs
+	function highlightBingoLetter(count) {
+    	    var bingoLetters = ['B', 'I', 'N', 'G', 'O'];
+    	    for (var i = 0; i < count; i++) {
+        	document.getElementById('letter-' + bingoLetters[i]).classList.add('highlight');
+    	    }
+        }
+
+
+        // Display the winner message
+        function winner() {
+            document.getElementById('winner-message').style.display = 'block';
+            celebrateWinner();
+        }
+
+        // Remove the highlight from BINGO letters
+        function resetBingoLetters() {
+            bingoLetters.forEach(letter => {
+                document.getElementById('letter-' + letter).classList.remove('highlight');
+            });
+        }
+
+        // Reset the game
+        function resetGame() {
+            initGame();
+            document.getElementById('winner-message').style.display = 'none';
+	    var confettiContainer = document.querySelector('.confetti-container');
+    	    if (confettiContainer) {
+        	confettiContainer.parentNode.removeChild(confettiContainer);
+    	    }
+        }
+
+        function celebrateWinner() {
+            var confettiContainer = document.createElement('div');
+            confettiContainer.classList.add('confetti-container');
+
+            for (var i = 0; i < 100; i++) {
+                var confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.animationDuration = Math.random() * 5 + 2 + 's';
+                confetti.style.animationDelay = Math.random() * 2 + 's';
+                confettiContainer.appendChild(confetti);
+            }
+
+            document.body.appendChild(confettiContainer);
+        }
+
+        // Initialize the game on page load
+        window.onload = initGame;
+    </script>
+</body>
+</html>
